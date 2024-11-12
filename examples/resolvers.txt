@@ -1,0 +1,28 @@
+# Example DNS resolvers
+# Format: IP address [description]
+
+# Google DNS
+8.8.8.8        # Google Primary
+8.8.4.4        # Google Secondary
+
+# Cloudflare DNS
+1.1.1.1        # Cloudflare Primary
+1.0.0.1        # Cloudflare Secondary
+
+# Quad9 DNS (Security focused)
+9.9.9.9        # Quad9 Primary
+149.112.112.112 # Quad9 Secondary
+
+# OpenDNS
+208.67.222.222 # OpenDNS Primary
+208.67.220.220 # OpenDNS Secondary
+
+# AdGuard DNS (Ad blocking)
+94.140.14.14   # AdGuard Primary
+94.140.15.15   # AdGuard Secondary
+
+# Level3 DNS
+4.2.2.1        # Level3 Primary
+4.2.2.2        # Level3 Secondary
+
+# Add your preferred resolvers below this line

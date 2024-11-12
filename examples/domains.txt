@@ -1,0 +1,31 @@
+# Example domains for DNS resolution
+# One domain per line
+
+# Popular websites
+google.com
+github.com
+cloudflare.com
+amazon.com
+
+# Tech domains
+kubernetes.io
+docker.com
+linux.org
+python.org
+
+# Social media
+twitter.com
+facebook.com
+linkedin.com
+
+# Content delivery
+cdn.jsdelivr.net
+ajax.googleapis.com
+npmjs.com
+
+# Example domains
+example.com
+test.example.com
+mail.example.com
+
+# Add your domains below this line

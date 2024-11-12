@@ -1,0 +1,59 @@
+{
+    "network": {
+        "interface": "eth0",
+        "rate_limit": 5000,
+        "buffer_size": 4096,
+        "xdp_mode": "native"
+    },
+    "dns": {
+        "timeout_ms": 1000,
+        "retries": 3,
+        "record_types": ["A", "AAAA", "MX", "TXT", "CNAME"],
+        "parallel_queries": 100
+    },
+    "cache": {
+        "size": 10000,
+        "default_ttl": 3600,
+        "min_ttl": 60,
+        "max_ttl": 86400,
+        "cleanup_interval": 300
+    },
+    "logging": {
+        "level": "info",
+        "file": "lightningdns.log",
+        "metrics_interval": 60,
+        "include_timestamps": true,
+        "format": "json"
+    },
+    "performance": {
+        "threads": 0,
+        "cpu_affinity": "auto",
+        "numa_aware": true,
+        "batch_size": 32
+    },
+    "output": {
+        "format": "json",
+        "file": "results.json",
+        "fields": [
+            "domain",
+            "record_type",
+            "response",
+            "ttl",
+            "resolver",
+            "response_time"
+        ]
+    },
+    "security": {
+        "rate_limit_per_ip": 100,
+        "blocked_ips": [],
+        "allowed_ips": [],
+        "dnssec": true
+    },
+    "advanced": {
+        "socket_buffer_size": 1048576,
+        "max_packet_size": 4096,
+        "tcp_fallback": true,
+        "edns_buffer_size": 1232,
+        "prefetch_threshold": 0.8
+    }
+}
