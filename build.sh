@@ -64,14 +64,16 @@ install_dependencies() {
 
     cd dpdk-${DPDK_VERSION}
 
-    # Configure DPDK with minimal drivers and disable warnings
+    # Configure DPDK with correct meson options for version 20.11.9
     echo "Configuring DPDK..."
     meson build \
         -Dexamples='' \
-        -Dtests=false \
         -Denable_docs=false \
-        -Dmaximum_drivers=false \
-        -Ddisable_drivers="crypto/*,event/*,raw/*,vdpa/*,baseband/*" \
+        -Denable_kmods=false \
+        -Dtests=false \
+        -Ddefault_library=shared \
+        -Dmachine=native \
+        -Denable_drivers="bus_pci,bus_vdev,mempool_ring,net_null,net_tap,net_virtio" \
         -Dc_args="-w -Wno-error"
 
     cd build
