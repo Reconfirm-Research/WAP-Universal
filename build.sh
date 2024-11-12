@@ -112,7 +112,12 @@ install_dependencies() {
         -Denable_docs=false \
         -Denable_kmods=false \
         -Dtests=false \
-        -Dexamples='' || {
+        -Dexamples='' \
+        -Dcrypto=false \
+        -Ddisable_drivers='crypto/*,regex/*,compress/*,vdpa/*,raw/*,baseband/*,event/*,net/mlx*,net/nfp,net/sfc,net/avp,net/bnx2x' \
+        -Dmbuf_refcnt_atomic=false \
+        -Dmax_ethports=1 \
+        -Dmax_numa_nodes=1 || {
         echo -e "${RED}Failed to configure DPDK with meson${NC}"
         exit 1
     }
