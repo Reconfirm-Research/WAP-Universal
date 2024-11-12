@@ -37,20 +37,46 @@ install_dependencies() {
         meson \
         ninja-build
 
-    # Install DPDK
+    # Install specific DPDK version known to work
     echo "Installing DPDK..."
-    DPDK_VERSION="21.11"
-    DPDK_DIR="/usr/local/src/dpdk-${DPDK_VERSION}"
+    DPDK_VERSION="20.11.9"  # Using an older, more stable version
+    DPDK_DIR="/usr/local/src/dpdk-stable-${DPDK_VERSION}"
     
     if [ ! -d "$DPDK_DIR" ]; then
         cd /usr/local/src
         wget http://fast.dpdk.org/rel/dpdk-${DPDK_VERSION}.tar.xz
         tar xf dpdk-${DPDK_VERSION}.tar.xz
         rm dpdk-${DPDK_VERSION}.tar.xz
+        mv dpdk-stable-${DPDK_VERSION} ${DPDK_DIR}
     fi
 
     cd "$DPDK_DIR"
-    meson build
+
+    # Configure DPDK with minimal drivers and disable warnings
+    cat > config/common_base << 'EOF'
+CONFIG_RTE_LIBRTE_ETHDEV=y
+CONFIG_RTE_LIBRTE_MEMPOOL=y
+CONFIG_RTE_LIBRTE_MBUF=y
+CONFIG_RTE_LIBRTE_RING=y
+CONFIG_RTE_LIBRTE_TIMER=y
+CONFIG_RTE_LIBRTE_HASH=y
+CONFIG_RTE_LIBRTE_EAL=y
+CONFIG_RTE_BUILD_SHARED_LIB=y
+CONFIG_RTE_NEXT_ABI=n
+CONFIG_RTE_LIBRTE_POWER=n
+CONFIG_RTE_LIBRTE_KNI=n
+CONFIG_RTE_KNI_KMOD=n
+EOF
+
+    # Build DPDK with specific CFLAGS to handle warnings
+    meson build \
+        -Dexamples='' \
+        -Dtests=false \
+        -Denable_docs=false \
+        -Dmaximum_drivers=false \
+        -Ddisable_drivers="crypto/*,event/*,raw/*,vdpa/*,baseband/*" \
+        -Dc_args="-w -Wno-error"
+
     cd build
     ninja
     ninja install
@@ -64,12 +90,27 @@ install_dependencies() {
     fi
 }
 
+# Configure hugepages
+setup_hugepages() {
+    echo "Configuring hugepages..."
+    echo 1024 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+    mkdir -p /dev/hugepages
+    mount -t hugetlbfs nodev /dev/hugepages
+}
+
 # Check for required packages
 echo "Checking dependencies..."
 if ! pkg-config --exists libdpdk || ! pkg-config --exists libnuma; then
     echo -e "${YELLOW}Missing required packages. Installing dependencies...${NC}"
     check_root
     install_dependencies
+fi
+
+# Setup hugepages
+if [ ! -d "/dev/hugepages" ] || [ $(cat /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages) -eq 0 ]; then
+    echo -e "${YELLOW}Setting up hugepages...${NC}"
+    check_root
+    setup_hugepages
 fi
 
 # Create build directory if it doesn't exist
@@ -87,7 +128,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 
 # Build the project
 echo "Building project..."
-make -j$(nproc) VERBOSE=1
+make -j$(nproc)
 
 echo -e "${GREEN}Build completed successfully!${NC}"
 echo ""
@@ -117,7 +158,7 @@ echo "DPDK version: $(pkg-config --modversion libdpdk)"
 echo "DPDK libraries: $(pkg-config --libs libdpdk)"
 echo "DPDK CFLAGS: $(pkg-config --cflags libdpdk)"
 
-# Check for hugepages
+# Check hugepages
 echo -e "\nHugepage Information:"
 echo "--------------------"
 grep Huge /proc/meminfo

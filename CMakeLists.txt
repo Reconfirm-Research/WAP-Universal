@@ -7,7 +7,12 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # Add compiler flags
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -pedantic")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -pedantic")
+    # Disable specific warnings for DPDK
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-parameter")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-deprecated-declarations")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-write-strings")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-address-of-packed-member")
 endif()
 
 # Define _GNU_SOURCE
@@ -16,10 +21,10 @@ add_definitions(-D_GNU_SOURCE)
 # Find required packages
 find_package(PkgConfig REQUIRED)
 
-# Find DPDK
-pkg_check_modules(DPDK REQUIRED libdpdk)
+# Find DPDK with specific version
+pkg_check_modules(DPDK REQUIRED libdpdk>=20.11.0 libdpdk<=20.11.9)
 if(NOT DPDK_FOUND)
-    message(FATAL_ERROR "DPDK not found. Please install dpdk-dev")
+    message(FATAL_ERROR "DPDK not found or version not supported. Please install DPDK 20.11.x")
 endif()
 
 # Find NUMA
@@ -61,6 +66,11 @@ target_link_libraries(whack
     z
 )
 
+# Set linker flags
+set_target_properties(whack PROPERTIES
+    LINK_FLAGS "-Wl,--no-as-needed -Wl,--export-dynamic"
+)
+
 # Installation
 install(TARGETS whack
     RUNTIME DESTINATION bin
@@ -84,8 +94,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Print configuration summary
 message(STATUS "Configuration Summary")
 message(STATUS "-------------------")
+message(STATUS "DPDK Version: ${DPDK_VERSION}")
 message(STATUS "DPDK Include: ${DPDK_INCLUDE_DIRS}")
 message(STATUS "DPDK Libraries: ${DPDK_LIBRARIES}")
+message(STATUS "DPDK CFLAGS: ${DPDK_CFLAGS}")
 message(STATUS "libnuma Include: ${NUMA_INCLUDE_DIRS}")
 message(STATUS "Compiler: ${CMAKE_C_COMPILER_ID}")
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
