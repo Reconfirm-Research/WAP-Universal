@@ -39,15 +39,15 @@ install_dependencies() {
 
     # Install specific DPDK version known to work
     echo "Installing DPDK..."
-    DPDK_VERSION="20.11.9"  # Using an older, more stable version
-    DPDK_DIR="/usr/local/src/dpdk-stable-${DPDK_VERSION}"
+    DPDK_VERSION="20.11.9"
+    DPDK_DIR="/usr/local/src/dpdk-${DPDK_VERSION}"
     
     if [ ! -d "$DPDK_DIR" ]; then
         cd /usr/local/src
         wget http://fast.dpdk.org/rel/dpdk-${DPDK_VERSION}.tar.xz
         tar xf dpdk-${DPDK_VERSION}.tar.xz
         rm dpdk-${DPDK_VERSION}.tar.xz
-        mv dpdk-stable-${DPDK_VERSION} ${DPDK_DIR}
+        # The directory is already named correctly from the tar file
     fi
 
     cd "$DPDK_DIR"
@@ -95,7 +95,7 @@ setup_hugepages() {
     echo "Configuring hugepages..."
     echo 1024 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
     mkdir -p /dev/hugepages
-    mount -t hugetlbfs nodev /dev/hugepages
+    mount -t hugetlbfs nodev /dev/hugepages || true  # Don't fail if already mounted
 }
 
 # Check for required packages
