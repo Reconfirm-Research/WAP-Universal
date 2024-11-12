@@ -42,33 +42,30 @@ install_dependencies() {
     DPDK_VERSION="20.11.9"
     DPDK_DIR="/usr/local/src/dpdk-${DPDK_VERSION}"
     
-    if [ ! -d "$DPDK_DIR" ]; then
-        cd /usr/local/src
-        wget http://fast.dpdk.org/rel/dpdk-${DPDK_VERSION}.tar.xz
-        tar xf dpdk-${DPDK_VERSION}.tar.xz
+    cd /usr/local/src
+    if [ -f "dpdk-${DPDK_VERSION}.tar.xz" ]; then
         rm dpdk-${DPDK_VERSION}.tar.xz
-        # The directory is already named correctly from the tar file
+    fi
+    
+    wget http://fast.dpdk.org/rel/dpdk-${DPDK_VERSION}.tar.xz
+    tar xf dpdk-${DPDK_VERSION}.tar.xz
+    rm dpdk-${DPDK_VERSION}.tar.xz
+
+    # Check if extraction was successful
+    if [ ! -d "dpdk-${DPDK_VERSION}" ] && [ ! -d "dpdk-stable-${DPDK_VERSION}" ]; then
+        echo -e "${RED}Error: DPDK extraction failed${NC}"
+        exit 1
     fi
 
-    cd "$DPDK_DIR"
+    # Handle different directory names that might be created
+    if [ -d "dpdk-stable-${DPDK_VERSION}" ]; then
+        mv dpdk-stable-${DPDK_VERSION} dpdk-${DPDK_VERSION}
+    fi
+
+    cd dpdk-${DPDK_VERSION}
 
     # Configure DPDK with minimal drivers and disable warnings
-    cat > config/common_base << 'EOF'
-CONFIG_RTE_LIBRTE_ETHDEV=y
-CONFIG_RTE_LIBRTE_MEMPOOL=y
-CONFIG_RTE_LIBRTE_MBUF=y
-CONFIG_RTE_LIBRTE_RING=y
-CONFIG_RTE_LIBRTE_TIMER=y
-CONFIG_RTE_LIBRTE_HASH=y
-CONFIG_RTE_LIBRTE_EAL=y
-CONFIG_RTE_BUILD_SHARED_LIB=y
-CONFIG_RTE_NEXT_ABI=n
-CONFIG_RTE_LIBRTE_POWER=n
-CONFIG_RTE_LIBRTE_KNI=n
-CONFIG_RTE_KNI_KMOD=n
-EOF
-
-    # Build DPDK with specific CFLAGS to handle warnings
+    echo "Configuring DPDK..."
     meson build \
         -Dexamples='' \
         -Dtests=false \
@@ -88,6 +85,9 @@ EOF
         echo -e "${RED}Error: DPDK installation failed${NC}"
         exit 1
     fi
+
+    # Return to original directory
+    cd -
 }
 
 # Configure hugepages
